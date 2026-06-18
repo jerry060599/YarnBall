@@ -2,10 +2,11 @@
 // Jerry Hsu, jerry.hsu.research@gmail.com, 2025
 
 #include "YarnBall.h"
+#if !defined(USE_HIP)
 #include <cuda.h>
-
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#endif
 
 namespace YarnBall {
 	Sim::Sim(int numVerts) {
@@ -250,7 +251,7 @@ namespace YarnBall {
 		cudaMemcpyAsync(meta.d_vels, vels, sizeof(vec3) * meta.numVerts, cudaMemcpyHostToDevice, stream);
 		cudaMemcpyAsync(meta.d_qs, qs, sizeof(Kit::Rotor) * meta.numVerts, cudaMemcpyHostToDevice, stream);
 		cudaMemcpyAsync(meta.d_qRests, qRests, sizeof(vec4) * meta.numVerts, cudaMemcpyHostToDevice, stream);
-		copyTempData << <(meta.numVerts + 511) / 512, 512, 0, stream >> > (meta.d_verts, meta.d_lastFlags, meta.d_lastCID, meta.numVerts);
+		copyTempData <<<(meta.numVerts + 511) / 512, 512, 0, stream >>> (meta.d_verts, meta.d_lastFlags, meta.d_lastCID, meta.numVerts);
 		cudaStreamSynchronize(stream);
 	}
 
@@ -270,7 +271,7 @@ namespace YarnBall {
 	}
 
 	void Sim::zeroVelocities() {
-		zeroVels << <(meta.numVerts + 1023) / 1024, 1024, 0, stream >> > (meta.d_vels, meta.d_lastVels, meta.numVerts);
+		zeroVels <<<(meta.numVerts + 1023) / 1024, 1024, 0, stream >>> (meta.d_vels, meta.d_lastVels, meta.numVerts);
 		checkCudaErrors(cudaGetLastError());
 	}
 

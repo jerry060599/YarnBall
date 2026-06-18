@@ -1,5 +1,7 @@
 #include "../YarnBall.h"
+#if !defined(USE_HIP)
 #include <cuda.h>
+#endif
 #include <fstream>
 #include <json/json.h>
 

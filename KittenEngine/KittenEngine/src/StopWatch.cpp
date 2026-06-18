@@ -13,7 +13,7 @@ namespace Kitten {
 	double StopWatch::time(const char* tag) {
 		if (gpuSync) gpuFinish();
 
-		auto time = high_resolution_clock::now();
+		auto time = steady_clock::now();
 		double delta = duration_cast<duration<double>>(time - lastPoint).count();
 		lastPoint = time;
 
@@ -30,7 +30,7 @@ namespace Kitten {
 		tags.clear();
 
 		if (gpuSync) gpuFinish();
-		lastPoint = high_resolution_clock::now();
+		lastPoint = steady_clock::now();
 	}
 
 	inline void sprintTime(char buff[128], double time) {

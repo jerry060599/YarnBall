@@ -1,10 +1,17 @@
 #include "../YarnBall.h"
+#if !defined(USE_HIP)
 #include <cuda.h>
+#endif
 
 namespace YarnBall {
 	void Sim::startRender() {
+		// The GPU<->GL buffer sharing path uses cuda*GL interop, which the ROCm
+		// ComputeBuffer does not expose. Rendering is only reached in the GUI
+		// (non-headless) loop; headless simulation never calls this.
+#if !defined(USE_HIP)
 		vertBuffer->cudaWriteGL(meta.d_verts);
 		qBuffer->cudaWriteGL(meta.d_qs);
+#endif
 	}
 
 	void Sim::render() {

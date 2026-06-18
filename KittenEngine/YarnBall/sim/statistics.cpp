@@ -1,5 +1,7 @@
 #include "../YarnBall.h"
+#if !defined(USE_HIP)
 #include <cuda.h>
+#endif
 
 namespace YarnBall {
 	void Sim::printCollisionStats() {

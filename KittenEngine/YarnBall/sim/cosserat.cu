@@ -1,8 +1,10 @@
 
 // Jerry Hsu, jerry.hsu.research@gmail.com, 2025
 
+#if !defined(USE_HIP)
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#endif
 #include "../YarnBall.h"
 
 namespace YarnBall {
@@ -256,9 +258,9 @@ namespace YarnBall {
 
 	void Sim::iterateCosserat() {
 		if (meta.useStepSizeLimit)
-			cosseratItr<true> << <(meta.numVerts + VERTEX_PER_BLOCK - 2) / (VERTEX_PER_BLOCK - 1), BLOCK_SIZE, 0, stream >> > (d_meta);
+			cosseratItr<true> <<<(meta.numVerts + VERTEX_PER_BLOCK - 2) / (VERTEX_PER_BLOCK - 1), BLOCK_SIZE, 0, stream >>> (d_meta);
 		else
-			cosseratItr<false> << <(meta.numVerts + VERTEX_PER_BLOCK - 2) / (VERTEX_PER_BLOCK - 1), BLOCK_SIZE, 0, stream >> > (d_meta);
-		quaternionLambdaItr << <(meta.numVerts + 127) / 128, 128, 0, stream >> > (d_meta);
+			cosseratItr<false> <<<(meta.numVerts + VERTEX_PER_BLOCK - 2) / (VERTEX_PER_BLOCK - 1), BLOCK_SIZE, 0, stream >>> (d_meta);
+		quaternionLambdaItr <<<(meta.numVerts + 127) / 128, 128, 0, stream >>> (d_meta);
 	}
 }
