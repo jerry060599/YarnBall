@@ -178,6 +178,15 @@ if(NOT EIGEN3_INCLUDE_DIR)
   get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
 endif()
 
+if(WIN32 AND NOT ROCTHRUST_INCLUDE_DIR)
+  # On Windows the Thrust/rocPRIM headers are not installed system-wide; locate
+  # them in the TheRock source tree or via CMAKE_PREFIX_PATH.  Set
+  # -DROCTHRUST_INCLUDE_DIR=<path-to-rocthrust-root> at configure time.
+  find_path(ROCTHRUST_INCLUDE_DIR "thrust/host_vector.h"
+    HINTS "$ENV{ROCM_PATH}/include" "$ENV{HIP_PATH}/include"
+    NO_DEFAULT_PATH)
+endif()
+
 target_include_directories(Gui PRIVATE
   ${KE_ROOT}
   ${KE}
@@ -189,7 +198,9 @@ target_include_directories(Gui PRIVATE
   ${IMGUI_DIR}/backends
   ${EIGEN3_INCLUDE_DIR}
   ${FREETYPE_INCLUDE_DIRS}
-  ${JSONCPP_INCLUDE_DIRS})
+  ${JSONCPP_INCLUDE_DIRS}
+  $<$<BOOL:${ROCTHRUST_INCLUDE_DIR}>:${ROCTHRUST_INCLUDE_DIR}>
+  $<$<BOOL:${ROCPRIM_INCLUDE_DIR}>:${ROCPRIM_INCLUDE_DIR}>)
 
 if(WIN32)
   set(ASSIMP_TARGET assimp)
@@ -222,14 +233,26 @@ if(USE_HIP)
   set_source_files_properties(${GPU_SRC} PROPERTIES LANGUAGE HIP)
   set_target_properties(Gui PROPERTIES HIP_ARCHITECTURES "${CMAKE_HIP_ARCHITECTURES}")
   target_compile_definitions(Gui PRIVATE USE_HIP)
+  # On Windows, clang++ in GCC-driver mode does not set __HIP__ (only the device
+  # TUs get it via --offload-arch); host .cpp TUs that force-include hip_runtime.h
+  # need __HIP_PLATFORM_AMD__ explicitly so hip_common.h takes the AMD path.
+  if(WIN32)
+    target_compile_definitions(Gui PRIVATE __HIP_PLATFORM_AMD__)
+  endif()
   target_link_libraries(Gui PRIVATE hip::host)
   # Force-include the compat header on the project's own sources (both the .cu
   # kernels and the host .cpp that pull Common.h). It brings in the HIP runtime
   # -- which makes __device__/__host__ host no-ops in the .cpp and supplies the
   # device math overloads ahead of GLM in the .cu -- and aliases the cuda*
   # surface to hip*. It is NOT applied to glad.c or the ImGui sources.
+  # clang-cl (MSVC frontend) uses /FI for force-include; GCC frontend uses -include.
+  if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    set(_FORCE_INCLUDE_OPT "/FI${KE_ROOT}/cuda_to_hip.h")
+  else()
+    set(_FORCE_INCLUDE_OPT "-include;${KE_ROOT}/cuda_to_hip.h")
+  endif()
   set_source_files_properties(${KE_ROOT}/main.cpp ${ENGINE_CPP} ${YARN_CPP} ${GPU_SRC} PROPERTIES
-    COMPILE_OPTIONS "-include;${KE_ROOT}/cuda_to_hip.h")
+    COMPILE_OPTIONS "${_FORCE_INCLUDE_OPT}")
 else()
   if(NOT CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 86)
