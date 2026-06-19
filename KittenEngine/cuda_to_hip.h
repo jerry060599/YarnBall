@@ -63,4 +63,17 @@
 #define cudaGraphDestroy                    hipGraphDestroy
 #define cudaGraphExecDestroy                hipGraphExecDestroy
 
+// --- OpenGL interop --------------------------------------------------------
+// Name mappings only; <hip/hip_gl_interop.h> itself needs GL types in scope, so
+// it is included by the consumer (ComputeBuffer.h) after glad, not here (this
+// shim is force-included before any GL header).
+#define cudaGraphicsResource                hipGraphicsResource
+#define cudaGraphicsResource_t              hipGraphicsResource_t
+#define cudaGraphicsRegisterFlagsNone       hipGraphicsRegisterFlagsNone
+#define cudaGraphicsGLRegisterBuffer        hipGraphicsGLRegisterBuffer
+#define cudaGraphicsMapResources            hipGraphicsMapResources
+#define cudaGraphicsResourceGetMappedPointer hipGraphicsResourceGetMappedPointer
+#define cudaGraphicsUnmapResources          hipGraphicsUnmapResources
+#define cudaGraphicsUnregisterResource      hipGraphicsUnregisterResource
+
 #endif // USE_HIP

@@ -7,7 +7,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 
-#if __has_include("cuda_runtime.h")
+#if defined(USE_HIP)
+// cuda_to_hip.h (force-included) already mapped the cudaGraphics* names to
+// hipGraphics*; pull the GL interop declarations now that glad is in scope.
+#include <hip/hip_gl_interop.h>
+#elif __has_include("cuda_runtime.h")
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #endif
@@ -30,7 +34,7 @@ namespace Kitten {
 		void download(void* dst);
 		void download(void* dst, size_t count);
 
-#ifdef __CUDA_RUNTIME_H__
+#if defined(__CUDA_RUNTIME_H__) || defined(USE_HIP)
 		// These are provided as an alternative to CudaComputerBuffer for compatibility reasons
 		void cudaWriteGL(void* ptr, size_t dataSize) {
 			cudaGraphicsResource* cudaRes;
@@ -66,7 +70,7 @@ namespace Kitten {
 #endif
 	};
 
-#ifdef __CUDA_RUNTIME_H__
+#if defined(__CUDA_RUNTIME_H__) || defined(USE_HIP)
 	class CudaComputeBuffer : public ComputeBuffer {
 	public:
 		cudaGraphicsResource* cudaRes;
