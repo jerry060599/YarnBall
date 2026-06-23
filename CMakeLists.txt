@@ -227,9 +227,8 @@ target_compile_definitions(Gui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 # --- GPU path configuration ------------------------------------------------
 if(USE_HIP)
-  if(NOT CMAKE_HIP_ARCHITECTURES)
-    set(CMAKE_HIP_ARCHITECTURES gfx90a)
-  endif()
+  # project(... LANGUAGES ... HIP) above auto-detects the host GPU arch (and
+  # errors on a no-GPU host); pass -DCMAKE_HIP_ARCHITECTURES to override.
   set_source_files_properties(${GPU_SRC} PROPERTIES LANGUAGE HIP)
   set_target_properties(Gui PROPERTIES HIP_ARCHITECTURES "${CMAKE_HIP_ARCHITECTURES}")
   target_compile_definitions(Gui PRIVATE USE_HIP)
