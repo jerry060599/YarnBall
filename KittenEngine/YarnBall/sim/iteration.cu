@@ -1,5 +1,7 @@
+#if !defined(USE_HIP)
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#endif
 #include "../YarnBall.h"
 
 namespace YarnBall {
@@ -44,7 +46,7 @@ namespace YarnBall {
 	}
 
 	void Sim::startIterate() {
-		initItr << <(meta.numVerts + 255) / 256, 256, 0, stream >> > (d_meta);
+		initItr <<<(meta.numVerts + 255) / 256, 256, 0, stream >>> (d_meta);
 	}
 
 	// Converts dx back to velocity and advects
@@ -64,6 +66,6 @@ namespace YarnBall {
 	}
 
 	void Sim::endIterate() {
-		endItr << <(meta.numVerts + 255) / 256, 256, 0, stream >> > (d_meta);
+		endItr <<<(meta.numVerts + 255) / 256, 256, 0, stream >>> (d_meta);
 	}
 }

@@ -15,7 +15,7 @@ namespace Kitten {
 		itr.first->second.gpuSync = gpuSync;
 
 		if (gpuSync) gpuFinish();
-		itr.first->second.lastPoint = high_resolution_clock::now();
+		itr.first->second.lastPoint = steady_clock::now();
 	}
 
 	double Timer::end(const char* tag) {
@@ -23,7 +23,7 @@ namespace Kitten {
 		if (!e.inFence) throw new std::runtime_error("Tag not started");
 
 		if (e.gpuSync) gpuFinish();
-		auto time = high_resolution_clock::now();
+		auto time = steady_clock::now();
 
 		double delta = duration_cast<duration<double>>(time - e.lastPoint).count();
 		e.dist.accu(delta);

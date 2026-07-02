@@ -1,9 +1,26 @@
 #pragma once
 // Jerry Hsu, 2021
 
-#define KITTEN_FUNC_DECL 
+#define KITTEN_FUNC_DECL
 
-#if __has_include("cuda_runtime.h")
+#if defined(USE_HIP)
+// ROCm/HIP build: cuda_to_hip.h is force-included ahead of this header, so it
+// has already pulled <hip/hip_runtime.h> and aliased the cuda* surface to hip*.
+#include <stdio.h>
+#include <stdlib.h>
+
+#undef KITTEN_FUNC_DECL
+#define KITTEN_FUNC_DECL __device__ __host__
+
+#define checkCudaErrors(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+	if (code != cudaSuccess) {
+		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) exit(code);
+	}
+}
+
+#elif __has_include("cuda_runtime.h")
 #pragma nv_diag_suppress esa_on_defaulted_function_ignored
 #include <cuda_runtime.h>
 #include <stdio.h>
@@ -178,6 +195,10 @@ namespace Kitten {
 			m[i] = mix(a[i], b[i], t);
 		return m;
 	}
+	// This matrix mix() hides glm's scalar/vector mix() inside namespace Kitten
+	// (a name declared in the namespace suppresses names from a using-directive),
+	// so callers that pass scalars/vectors find no overload. Re-introduce glm's.
+	using glm::mix;
 
 	template <int s, typename T>
 	KITTEN_FUNC_DECL inline T norm(mat<s, s, T, defaultp> m) {

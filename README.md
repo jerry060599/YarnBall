@@ -48,6 +48,28 @@ When in doubt, use glm version ```1.0.1#3```.
 This was tested to run on the NVIDIA RTX 3090, 4090, and 5090. 
 It was also tested with the RTX 2080 by changing the CUDA code generation setting to use "compute_75,sm_75". 
 
+### Building on Linux with CMake (NVIDIA CUDA or AMD ROCm)
+
+A `CMakeLists.txt` at the repo root builds the simulator on Linux for either NVIDIA CUDA (default) or AMD GPUs via ROCm/HIP (`-DUSE_HIP=ON`). GLM 1.0.1 and Dear ImGui are fetched automatically; the remaining dependencies (glfw, OpenGL, Freetype, assimp, CLI11, Eigen3, jsoncpp, stb) come from the system package manager. Run `git lfs pull` first to fetch the `.bcc` model files.
+
+NVIDIA CUDA:
+```bash
+cmake -S . -B build -DCMAKE_CUDA_ARCHITECTURES=86 -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+```
+
+AMD ROCm/HIP (set the gfx target for your GPU, e.g. `gfx90a`, `gfx1100`, `gfx1201`):
+```bash
+ROCM_PATH=${ROCM_PATH:-/opt/rocm}
+cmake -S . -B build -DUSE_HIP=ON -DCMAKE_HIP_ARCHITECTURES=gfx90a \
+  -DCMAKE_HIP_COMPILER=$ROCM_PATH/llvm/bin/clang++ \
+  -DCMAKE_CXX_COMPILER=$ROCM_PATH/llvm/bin/clang++ \
+  -DCMAKE_C_COMPILER=$ROCM_PATH/llvm/bin/clang -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+```
+
+The headless simulation path (`--headless`) runs the full GPU compute pipeline without windowing; the interactive GUI and its GL/GPU interop currently target the Windows/Visual Studio build.
+
 ## Usage
 This repo contains both a sample CLI and a C++ interface. 
 In most cases, it is the easiest to load a scene directly through a provided JSON.

@@ -1,6 +1,8 @@
+#if !defined(USE_HIP)
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <device_atomic_functions.h>
+#endif
 
 #include <thrust/swap.h>
 
@@ -81,7 +83,7 @@ namespace YarnBall {
 
 	void Sim::detectCollisions() {
 		// Rebuild bvh
-		buildAABBs << <(meta.numVerts + 255) / 256, 256 >> > (d_meta, d_error);
+		buildAABBs <<<(meta.numVerts + 255) / 256, 256 >>> (d_meta, d_error);
 
 		if (lastBVHRebuild >= meta.bvhRebuildPeriod) {
 			bvh.compute(meta.d_bounds, meta.numVerts);
@@ -97,7 +99,7 @@ namespace YarnBall {
 
 		// Build collision list
 		cudaMemsetAsync(meta.d_numCols, 0, sizeof(int) * meta.numVerts, stream);
-		buildCollisionList << <(numCols + 127) / 128, 128, 0, stream >> > (d_meta, numCols, d_error);
+		buildCollisionList <<<(numCols + 127) / 128, 128, 0, stream >>> (d_meta, numCols, d_error);
 	}
 
 	__global__ void recomputeStepLimitKernel(MetaData* data) {
@@ -136,6 +138,6 @@ namespace YarnBall {
 	}
 
 	void Sim::recomputeStepLimit() {
-		recomputeStepLimitKernel << <(meta.numVerts + 127) / 128, 128, 0, stream >> > (d_meta);
+		recomputeStepLimitKernel <<<(meta.numVerts + 127) / 128, 128, 0, stream >>> (d_meta);
 	}
 }

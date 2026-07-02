@@ -12,6 +12,15 @@
 #include <sstream>
 #include <fstream>
 #include <unordered_map>
+#include <cstdio>
+
+#if !defined(_MSC_VER)
+// fopen_s is an MSVC extension; provide the equivalent on other toolchains.
+static inline int fopen_s(FILE** f, const char* name, const char* mode) {
+	*f = std::fopen(name, mode);
+	return *f ? 0 : -1;
+}
+#endif
 
 namespace Kitten {
 	unsigned int meshImportFlags = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;

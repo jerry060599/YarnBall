@@ -1,8 +1,13 @@
 #include "../YarnBall.h"
+#if !defined(USE_HIP)
 #include <cuda.h>
+#endif
 
 namespace YarnBall {
 	void Sim::startRender() {
+		// Push the simulated vertices/orientations into the GL vertex buffers via
+		// GPU<->GL interop (cudaGraphics* on CUDA, hipGraphics* on ROCm). Only
+		// reached in the GUI (non-headless) loop; headless never calls this.
 		vertBuffer->cudaWriteGL(meta.d_verts);
 		qBuffer->cudaWriteGL(meta.d_qs);
 	}

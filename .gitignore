@@ -354,3 +354,8 @@ KittenEngine/frames/
 KittenEngine/frame.obj
 
 KittenEngine/frameFiber.obj
+
+# ROCm/HIP CMake build trees
+/build_hip/
+/build_dbg/
+/build_asan/
